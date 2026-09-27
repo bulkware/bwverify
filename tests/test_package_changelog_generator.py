@@ -15,7 +15,8 @@ class PackageChangelogGeneratorTests(unittest.TestCase):
 
     def test_repository_metadata_is_valid_toml(self):
         """Keep the metadata consumed by native package builders TOML-valid."""
-        metadata_path = Path(__file__).resolve().parents[1] / "pyproject.toml"
+        repository_root = Path(__file__).resolve().parents[1]
+        metadata_path = repository_root / "pyproject.toml"
 
         project = tomllib.loads(metadata_path.read_text(encoding="utf-8"))["project"]
 
@@ -24,6 +25,11 @@ class PackageChangelogGeneratorTests(unittest.TestCase):
         self.assertEqual(project["license"], "GPL-3.0-or-later")
         self.assertEqual(project["license-files"], ["LICENSE.md"])
         self.assertFalse(any(item.startswith("License ::") for item in project["classifiers"]))
+
+        # The distributable license file must contain the complete GPLv3 text.
+        license_text = (repository_root / "LICENSE.md").read_text(encoding="utf-8")
+        self.assertTrue(license_text.startswith("                    GNU GENERAL PUBLIC LICENSE"))
+        self.assertIn("                     END OF TERMS AND CONDITIONS", license_text)
 
     @staticmethod
     def create_project(root: Path, changelog: str) -> Path:

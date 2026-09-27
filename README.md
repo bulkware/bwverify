@@ -2,7 +2,7 @@
 
 A small desktop application for creating and verifying checksum files.
 
-bwVerify is licensed under GPL-3.0-or-later; see `LICENSE.md`.
+bwVerify is licensed under [GPL-3.0-or-later](LICENSE.md).
 
 ## Interface
 
