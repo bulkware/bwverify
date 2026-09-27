@@ -1,0 +1,2 @@
+# PyInstaller creates the self-contained Windows application folder used by the NSIS wrapper.
+PyInstaller>=6.0

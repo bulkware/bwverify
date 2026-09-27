@@ -1,0 +1,14 @@
+Source: bwverify
+Section: utils
+Priority: optional
+Maintainer: Antti-Pekka Meronen <antice@kapsi.fi>
+Build-Depends: appstream, debhelper-compat (= 13), dh-python, pybuild-plugin-pyproject,
+ python3-all, python3-setuptools, shared-mime-info
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+
+Package: bwverify
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, python3-gi, gir1.2-gtk-4.0,
+ shared-mime-info
+Description: A desktop application for verifying file integrity using checksum files.

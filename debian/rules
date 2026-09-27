@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+
+# Delegate standard Python packaging steps to debhelper and pybuild.
+%:
+	dh $@ --with python3 --buildsystem=pybuild
+
+# Test checkout sources so package creation stops on application regressions.
+override_dh_auto_test:
+	PYTHONPATH=src python3 -m unittest discover -s tests -v
+
+# Wheel installation excludes desktop integration, so stage those files explicitly.
+override_dh_auto_install:
+	dh_auto_install
+	install -D -m 644 data/org.bulkware.bwverify.desktop \
+		debian/bwverify/usr/share/applications/org.bulkware.bwverify.desktop
+	install -D -m 644 data/org.bulkware.bwverify.metainfo.xml \
+		debian/bwverify/usr/share/metainfo/org.bulkware.bwverify.metainfo.xml
+	install -D -m 644 data/org.bulkware.bwverify.xml \
+		debian/bwverify/usr/share/mime/packages/org.bulkware.bwverify.xml
+	install -D -m 644 data/icons/hicolor/scalable/apps/org.bulkware.bwverify.svg \
+		debian/bwverify/usr/share/icons/hicolor/scalable/apps/org.bulkware.bwverify.svg
+	install -D -m 644 data/icons/hicolor/symbolic/apps/org.bulkware.bwverify-symbolic.svg \
+		debian/bwverify/usr/share/icons/hicolor/symbolic/apps/org.bulkware.bwverify-symbolic.svg

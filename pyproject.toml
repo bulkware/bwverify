@@ -1,0 +1,81 @@
+[build-system]
+# Setuptools builds both source and wheel distributions from the src/ layout.
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# PEP 621 metadata is also consumed by the native-package changelog generator.
+name = "bwVerify"
+version = "1.0.0"
+description = "A desktop application for verifying file integrity using checksum files."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE.md"]
+authors = [{ name = "Antti-Pekka Meronen", email = "antice@kapsi.fi" }]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Utilities",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
+[project.scripts]
+bwverify = "bwverify.bwverify:main"
+
+[project.urls]
+"Bug Reports" = "https://github.com/bulkware/bwverify/issues"
+Source = "https://github.com/bulkware/bwverify"
+
+[project.optional-dependencies]
+# Keep development-only tools out of end-user installations.
+dev = ["coverage>=7.0", "pylint>=3.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+bwverify = ["icons/*.svg", "icons/*/*.svg"]
+
+# The GUI uses GObject properties and GTK callbacks, which PyLint cannot fully
+# infer from introspection metadata. Keep structural and conventional checks on
+# while excluding only those framework-driven false positives and callback noise.
+[tool.pylint.main]
+py-version = "3.11"
+recursive = true
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pylint.design]
+# The application controller groups GTK callbacks for one window in one module.
+max-module-lines = 1100
+
+[tool.pylint."messages control"]
+disable = [
+    "arguments-differ",
+    "attribute-defined-outside-init",
+    "no-member",
+    "no-value-for-parameter",
+    "protected-access",
+    "wrong-import-position",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-instance-attributes",
+    "too-many-locals",
+    "too-many-positional-arguments",
+    "too-many-public-methods",
+    "too-many-statements",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["bwverify"]
+
+[tool.coverage.report]
+show_missing = true

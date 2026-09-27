@@ -1,0 +1,4 @@
+; Verify three SVG icons shipped in the source checkout.
+../src/bwverify/icons/oxygen/document-new.svg 467CFA05
+../src/bwverify/icons/oxygen/document-open.svg B97D9AF6
+../src/bwverify/icons/oxygen/dialog-ok.svg 93ECE926

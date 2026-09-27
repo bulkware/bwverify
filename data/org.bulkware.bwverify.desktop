@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=bwVerify
+Comment=A desktop application for verifying file integrity using checksum files.
+Icon=org.bulkware.bwverify
+Exec=bwverify
+Terminal=false
+Type=Application
+Categories=GTK;Utility;
+Keywords=SFV;MD5;SHA;CRC;checksum;verification;
+# Desktop-entry MIME values are one semicolon-delimited property and cannot be wrapped.
+MimeType=application/x-sfv;application/x-bwverify-md5;application/x-bwverify-sha1;application/x-bwverify-sha224;application/x-bwverify-sha256;application/x-bwverify-sha384;application/x-bwverify-sha512;
+StartupWMClass=org.bulkware.bwverify

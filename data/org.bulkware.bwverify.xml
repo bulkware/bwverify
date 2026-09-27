@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-sfv">
+    <comment>Simple file verification manifest</comment>
+    <glob pattern="*.sfv"/>
+  </mime-type>
+  <mime-type type="application/x-bwverify-md5">
+    <comment>MD5 checksum manifest</comment>
+    <glob pattern="*.md5"/>
+  </mime-type>
+  <mime-type type="application/x-bwverify-sha1">
+    <comment>SHA-1 checksum manifest</comment>
+    <glob pattern="*.sha1"/>
+  </mime-type>
+  <mime-type type="application/x-bwverify-sha224">
+    <comment>SHA-224 checksum manifest</comment>
+    <glob pattern="*.sha224"/>
+  </mime-type>
+  <mime-type type="application/x-bwverify-sha256">
+    <comment>SHA-256 checksum manifest</comment>
+    <glob pattern="*.sha256"/>
+  </mime-type>
+  <mime-type type="application/x-bwverify-sha384">
+    <comment>SHA-384 checksum manifest</comment>
+    <glob pattern="*.sha384"/>
+  </mime-type>
+  <mime-type type="application/x-bwverify-sha512">
+    <comment>SHA-512 checksum manifest</comment>
+    <glob pattern="*.sha512"/>
+  </mime-type>
+</mime-info>
