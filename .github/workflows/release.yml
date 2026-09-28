@@ -24,7 +24,8 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          # Match the CPython 3.14 wheels shipped by the gvsbuild GTK runtime.
+          python-version: "3.14"
       - name: Install GTK runtime and Python bindings
         shell: powershell
         run: |
@@ -34,10 +35,13 @@ jobs:
           if ($null -eq $asset) { throw "The latest gvsbuild release has no GTK4 x64 archive." }
           Invoke-WebRequest $asset.browser_download_url -OutFile gtk-runtime.zip
           Expand-Archive gtk-runtime.zip -DestinationPath C:\gtk -Force
-          $wheel = Get-ChildItem C:\gtk\wheels -Filter "PyGObject-*.whl" -Recurse | Select-Object -First 1
-          $cairoWheel = Get-ChildItem C:\gtk\wheels -Filter "pycairo-*.whl" -Recurse | Select-Object -First 1
+          $pythonTag = python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')"
+          $wheel = Get-ChildItem C:\gtk\wheels -Filter "PyGObject-*.whl" -Recurse |
+            Where-Object { $_.Name -match "-$pythonTag-" } | Select-Object -First 1
+          $cairoWheel = Get-ChildItem C:\gtk\wheels -Filter "pycairo-*.whl" -Recurse |
+            Where-Object { $_.Name -match "-$pythonTag-" } | Select-Object -First 1
           if ($null -eq $wheel -or $null -eq $cairoWheel) {
-            throw "The gvsbuild archive does not contain the required Python wheels."
+            throw "The gvsbuild archive does not contain PyGObject and PyCairo wheels for $pythonTag."
           }
           python -m pip install $wheel.FullName $cairoWheel.FullName
       - name: Build Windows artifacts

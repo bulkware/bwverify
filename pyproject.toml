@@ -62,7 +62,9 @@ include-files = [
 ]
 include-msvcr = true
 packages = ["gi"]
-includes = ["gi.repository.Gdk", "gi.repository.Gio", "gi.repository.GLib", "gi.repository.Gtk"]
+# importlib.metadata loads zipfile at runtime; include it explicitly so the
+# portable archive does not depend on the build machine's standard library.
+includes = ["zipfile"]
 zip-exclude-packages = ["*"]
 
 [tool.cxfreeze.bdist_msi]

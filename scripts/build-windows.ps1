@@ -31,19 +31,45 @@ function Copy-GtkDirectory {
     Copy-Item -Path $sourcePath -Destination $destinationPath -Recurse -Force
 }
 
+function Copy-GtkRuntimeBinaries {
+    $sourcePath = Join-Path $gtkPrefix "bin"
+    if (-not (Test-Path -LiteralPath $sourcePath -PathType Container)) {
+        throw "Required GTK directory was not found: $sourcePath"
+    }
+
+    $destinationPath = Join-Path $runtimePath "bin"
+    New-Item -ItemType Directory -Force -Path $destinationPath | Out-Null
+    $runtimeBinaries = @(Get-ChildItem -LiteralPath $sourcePath -Filter "*.dll" -File)
+    if ($runtimeBinaries.Count -eq 0) {
+        throw "No GTK runtime DLLs were found in: $sourcePath"
+    }
+    foreach ($binary in $runtimeBinaries) {
+        Copy-Item -LiteralPath $binary.FullName -Destination $destinationPath -Force
+    }
+}
+
 Remove-Item -Recurse -Force $buildRoot -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $runtimePath | Out-Null
 
-# GTK loads typelibs, modules, schemas, and icon themes dynamically at runtime.
+# Copy DLLs only: gvsbuild's bin directory also contains developer utilities and
+# debug-symbol files that are not required by the bundled GTK runtime.
+Copy-GtkRuntimeBinaries
+
+# GTK loads typelibs, pixbuf loaders, schemas, and icon themes dynamically at runtime.
+# Some GTK4 distributions also provide input modules under lib\gtk-4.0, but
+# gvsbuild's current runtime archive does not.  The directory is optional.
 foreach ($directory in @(
-    "bin",
     "lib\girepository-1.0",
     "lib\gdk-pixbuf-2.0",
-    "lib\gtk-4.0",
     "share\glib-2.0\schemas",
     "share\icons"
 )) {
     Copy-GtkDirectory $directory
+}
+
+$gtkModuleDirectory = "lib\gtk-4.0"
+if (Test-Path -LiteralPath (Join-Path $gtkPrefix $gtkModuleDirectory) -PathType Container) {
+    Copy-GtkDirectory $gtkModuleDirectory
 }
 
 # Make the staged GTK libraries discoverable while cx_Freeze imports PyGObject.
