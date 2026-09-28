@@ -35,12 +35,49 @@ Source = "https://github.com/bulkware/bwverify"
 [project.optional-dependencies]
 # Keep development-only tools out of end-user installations.
 dev = ["coverage>=7.0", "pylint>=3.0"]
+# Release builds use cx_Freeze to produce the portable Windows archive and MSI.
+release = ["build>=1.2", "cx-Freeze>=8.6"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
 bwverify = ["icons/*.svg", "icons/*/*.svg"]
+
+# cx_Freeze owns both Windows artifact formats so they share one application layout.
+[[tool.cxfreeze.executables]]
+script = "src/freeze_entry.py"
+base = "gui"
+target-name = "bwVerify"
+icon = "data/icons/bwverify.ico"
+shortcut-name = "bwVerify"
+shortcut-dir = "bwVerifyMenu"
+copyright = "Copyright (C) 2026 Bulkware"
+
+[tool.cxfreeze.build_exe]
+build-exe = "build/windows/bwVerify"
+include-files = [
+    ["src/bwverify/icons", "bwverify/icons"],
+    ["build/windows/gtk-runtime", "gtk-runtime"],
+]
+include-msvcr = true
+packages = ["gi"]
+includes = ["gi.repository.Gdk", "gi.repository.Gio", "gi.repository.GLib", "gi.repository.Gtk"]
+zip-exclude-packages = ["*"]
+
+[tool.cxfreeze.bdist_msi]
+dist-dir = "build/windows/installer"
+product-name = "bwVerify"
+initial-target-dir = "[LocalAppDataFolder]Programs\\bwVerify"
+install-icon = "data/icons/bwverify.ico"
+launch-on-finish = true
+upgrade-code = "{86DC31B1-3E1E-4B64-95C8-4FC4DE70AE45}"
+
+[tool.cxfreeze.bdist_msi.data]
+Directory = [
+    ["ProgramMenuFolder", "TARGETDIR", "."],
+    ["bwVerifyMenu", "ProgramMenuFolder", "BWVERIFY~1|bwVerify"],
+]
 
 # The GUI uses GObject properties and GTK callbacks, which PyLint cannot fully
 # infer from introspection metadata. Keep structural and conventional checks on

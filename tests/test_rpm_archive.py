@@ -20,7 +20,7 @@ class RpmArchiveTests(unittest.TestCase):
             root = Path(directory)
             scripts = Path(__file__).resolve().parents[1] / "scripts"
             script = scripts / "build-rpm.sh"
-            generator = scripts / "generate_package_changelogs.py"
+            generator = scripts / "package_metadata.py"
             # The staged archive must contain this exact allowlist and nothing from the fixture.
             inputs = {
                 "pyproject.toml": (
@@ -68,9 +68,9 @@ class RpmArchiveTests(unittest.TestCase):
                 path.write_text(contents)
             (root / "scripts").mkdir(exist_ok=True)
             shutil.copy2(script, root / "scripts/build-rpm.sh")
-            shutil.copy2(generator, root / "scripts/generate_package_changelogs.py")
+            shutil.copy2(generator, root / "scripts/package_metadata.py")
             inputs["scripts/build-rpm.sh"] = script.read_text()
-            inputs["scripts/generate_package_changelogs.py"] = generator.read_text()
+            inputs["scripts/package_metadata.py"] = generator.read_text()
 
             # Capture the selected spec and make any accidental Git invocation fail.
             binaries = root / "bin"

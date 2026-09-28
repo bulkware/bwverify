@@ -55,6 +55,6 @@ tar -czf "$build_root/SOURCES/bwverify-$version.tar.gz" \
     -C "$staging_root" "bwverify-$version"
 # Generate native release notes in the staged spec, never in the tracked template.
 cp "$project_root/packaging/rpm/bwverify.spec" "$staging_root/bwverify.spec"
-python3 "$project_root/scripts/generate_package_changelogs.py" \
+python3 "$project_root/scripts/package_metadata.py" \
     --rpm-spec "$staging_root/bwverify.spec" --revision "$package_revision"
 rpmbuild --define "_topdir $build_root" -ba "$staging_root/bwverify.spec"

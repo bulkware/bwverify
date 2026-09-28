@@ -188,12 +188,16 @@ class ApplicationPolicyTests(unittest.TestCase):
 
     def test_system_theme_uses_gtk_desktop_color_scheme(self):
         """The System preference follows GTK's desktop dark-mode signal."""
+        color_scheme = SimpleNamespace(DARK=object(), LIGHT=object())
         gtk_settings = mock.Mock()
-        gtk_settings.get_property.return_value = Gtk.InterfaceColorScheme.DARK
+        gtk_settings.get_property.return_value = color_scheme.DARK
         application = SimpleNamespace(window=mock.Mock(), theme="system")
 
-        with mock.patch(
-            "bwverify.bwverify.Gtk.Settings.get_for_display", return_value=gtk_settings
+        with (
+            mock.patch("bwverify.bwverify.GtkInterfaceColorScheme", color_scheme),
+            mock.patch(
+                "bwverify.bwverify.Gtk.Settings.get_for_display", return_value=gtk_settings
+            ),
         ):
             BwVerifyApplication.apply_theme(application)
 
@@ -203,18 +207,41 @@ class ApplicationPolicyTests(unittest.TestCase):
 
     def test_system_theme_falls_back_to_the_configured_gtk_theme(self):
         """A dark GTK theme works when the desktop does not report a scheme."""
+        color_scheme = SimpleNamespace(DARK=object(), LIGHT=object(), UNSUPPORTED=object())
         gtk_settings = mock.Mock()
         gtk_settings.get_property.side_effect = lambda name: {
-            "gtk-interface-color-scheme": Gtk.InterfaceColorScheme.UNSUPPORTED,
+            "gtk-interface-color-scheme": color_scheme.UNSUPPORTED,
             "gtk-theme-name": "Example-dark",
         }[name]
         application = SimpleNamespace(window=mock.Mock(), theme="system")
 
-        with mock.patch(
-            "bwverify.bwverify.Gtk.Settings.get_for_display", return_value=gtk_settings
+        with (
+            mock.patch("bwverify.bwverify.GtkInterfaceColorScheme", color_scheme),
+            mock.patch(
+                "bwverify.bwverify.Gtk.Settings.get_for_display", return_value=gtk_settings
+            ),
         ):
             BwVerifyApplication.apply_theme(application)
 
+        gtk_settings.set_property.assert_called_once_with(
+            "gtk-application-prefer-dark-theme", True
+        )
+
+    def test_system_theme_falls_back_when_gtk_has_no_color_scheme_enum(self):
+        """Older GTK bindings use the configured GTK theme as the system preference."""
+        gtk_settings = mock.Mock()
+        gtk_settings.get_property.return_value = "Example-dark"
+        application = SimpleNamespace(window=mock.Mock(), theme="system")
+
+        with (
+            mock.patch("bwverify.bwverify.GtkInterfaceColorScheme", None),
+            mock.patch(
+                "bwverify.bwverify.Gtk.Settings.get_for_display", return_value=gtk_settings
+            ),
+        ):
+            BwVerifyApplication.apply_theme(application)
+
+        gtk_settings.get_property.assert_called_once_with("gtk-theme-name")
         gtk_settings.set_property.assert_called_once_with(
             "gtk-application-prefer-dark-theme", True
         )

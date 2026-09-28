@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  verify-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify tag matches project version
+        run: |
+          VERSION=$(sed -n 's/^version = "\([^"]*\)"/\1/p' pyproject.toml)
+          test "${GITHUB_REF_NAME}" = "v${VERSION}"
+
+  windows:
+    needs: verify-tag
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install GTK runtime and Python bindings
+        shell: powershell
+        run: |
+          $release = Invoke-RestMethod https://api.github.com/repos/wingtk/gvsbuild/releases/latest
+          $asset = $release.assets | Where-Object { $_.name -match '^GTK4_Gvsbuild_.*_x64\.zip$' } |
+            Select-Object -First 1
+          if ($null -eq $asset) { throw "The latest gvsbuild release has no GTK4 x64 archive." }
+          Invoke-WebRequest $asset.browser_download_url -OutFile gtk-runtime.zip
+          Expand-Archive gtk-runtime.zip -DestinationPath C:\gtk -Force
+          $wheel = Get-ChildItem C:\gtk\wheels -Filter "PyGObject-*.whl" -Recurse | Select-Object -First 1
+          $cairoWheel = Get-ChildItem C:\gtk\wheels -Filter "pycairo-*.whl" -Recurse | Select-Object -First 1
+          if ($null -eq $wheel -or $null -eq $cairoWheel) {
+            throw "The gvsbuild archive does not contain the required Python wheels."
+          }
+          python -m pip install $wheel.FullName $cairoWheel.FullName
+      - name: Build Windows artifacts
+        shell: powershell
+        run: ./scripts/build-windows.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            build/windows/*-portable.zip
+            build/windows/installer/*.msi
+
+  debian:
+    needs: verify-tag
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build Debian package
+        run: |
+          apt-get update
+          apt-get install -y git make sudo
+          make SUDO= install-deb
+          make deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: debian
+          path: build/deb/*.deb
+
+  rpm:
+    needs: verify-tag
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build RPM package
+        run: |
+          dnf -y install git make sudo
+          make SUDO= install-rpm
+          make rpm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rpm
+          path: build/rpm/rpmbuild/RPMS/**/*.rpm
+
+  publish:
+    needs: [windows, debian, rpm]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" artifacts/**/* --generate-notes

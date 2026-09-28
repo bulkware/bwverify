@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: ["v*"]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install GTK and test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gir1.2-gtk-4.0 python3-gi
+          python -m venv --system-site-packages .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install '.[dev]'
+      - name: Run checks
+        run: make PYTHON=.venv/bin/python check
+      - name: Compile source
+        run: .venv/bin/python -m compileall -q src

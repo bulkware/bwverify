@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=too-many-lines
 
 """A desktop application for verifying file integrity using checksum files."""
 
@@ -48,6 +49,9 @@ from bwverify.window import (
 
 APPLICATION_ID = "org.bulkware.bwverify"
 APPLICATION_NAME = "bwVerify"
+
+# GTK introduced this enum after some supported distribution releases.
+GtkInterfaceColorScheme = getattr(Gtk, "InterfaceColorScheme", None)
 
 
 def application_version():
@@ -175,14 +179,15 @@ class BwVerifyApplication(Gtk.Application):
     @staticmethod
     def system_prefers_dark(gtk_settings):
         """Return GTK's desktop preference, falling back to a dark GTK theme name."""
-        try:
-            color_scheme = gtk_settings.get_property("gtk-interface-color-scheme")
-            if color_scheme == Gtk.InterfaceColorScheme.DARK:
-                return True
-            if color_scheme == Gtk.InterfaceColorScheme.LIGHT:
-                return False
-        except (AttributeError, TypeError):
-            pass
+        if GtkInterfaceColorScheme is not None:
+            try:
+                color_scheme = gtk_settings.get_property("gtk-interface-color-scheme")
+                if color_scheme == GtkInterfaceColorScheme.DARK:
+                    return True
+                if color_scheme == GtkInterfaceColorScheme.LIGHT:
+                    return False
+            except (AttributeError, TypeError):
+                pass
         theme_name = gtk_settings.get_property("gtk-theme-name") or ""
         return "dark" in theme_name.lower()
 

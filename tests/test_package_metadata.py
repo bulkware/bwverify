@@ -1,4 +1,4 @@
-"""Test native package changelog generation from the project release notes."""
+"""Test native package metadata generation from the project release notes."""
 
 from pathlib import Path
 import shutil
@@ -10,8 +10,8 @@ import unittest
 
 
 # The generator is invoked as a script to cover its real command-line integration.
-class PackageChangelogGeneratorTests(unittest.TestCase):
-    """Exercise the generator in disposable project roots."""
+class PackageMetadataTests(unittest.TestCase):
+    """Exercise the package metadata helper in disposable project roots."""
 
     def test_repository_metadata_is_valid_toml(self):
         """Keep the metadata consumed by native package builders TOML-valid."""
@@ -33,11 +33,11 @@ class PackageChangelogGeneratorTests(unittest.TestCase):
 
     @staticmethod
     def create_project(root: Path, changelog: str) -> Path:
-        """Create the smallest valid release project and return its generator path."""
+        """Create the smallest valid release project and return its helper path."""
         # Each case owns its metadata and release notes, preventing mutations in this repo.
         scripts = root / "scripts"
         scripts.mkdir()
-        generator = Path(__file__).resolve().parents[1] / "scripts/generate_package_changelogs.py"
+        generator = Path(__file__).resolve().parents[1] / "scripts/package_metadata.py"
         shutil.copy2(generator, scripts / generator.name)
         (root / "pyproject.toml").write_text(
             "[project]\n"

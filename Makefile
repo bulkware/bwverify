@@ -1,8 +1,9 @@
 # Common development commands; override PYTHON to select a virtual environment.
 PYTHON ?= python3
+SUDO ?= sudo
 PACKAGE_REVISION ?= 1
 .DEFAULT_GOAL := help
-.PHONY: help run rpm deb windows build test coverage lint check clean clean-dry-run
+.PHONY: help run rpm deb windows build test coverage lint check clean clean-dry-run prepare-release install-deb install-rpm
 
 # Additional Make goals let `make run path/to/checks.sfv` open a manifest at launch.
 RUN_ARGUMENTS := $(filter-out run,$(MAKECMDGOALS))
@@ -16,7 +17,10 @@ help:
 	@echo "make run [FILE]     Run the application, optionally opening a checksum file"
 	@echo "make rpm            Build RPM packages from the local source"
 	@echo "make deb            Build Debian packages from the working tree"
-	@echo "make windows        Build the Windows portable application and installer"
+	@echo "make windows        Build the Windows portable application and MSI installer"
+	@echo "make prepare-release  Synchronize release metadata from CHANGELOG.md"
+	@echo "make install-deb    Install Debian package build dependencies"
+	@echo "make install-rpm    Install RPM package build dependencies"
 	@echo "make build          Build Python source and wheel distributions"
 	@echo "make test           Run unit tests"
 	@echo "make coverage       Measure application-code test coverage"
@@ -36,9 +40,21 @@ rpm:
 deb:
 	PACKAGE_REVISION="$(PACKAGE_REVISION)" bash scripts/build-deb.sh
 
-# The Windows builder owns PyInstaller and optional NSIS setup from its PowerShell environment.
+# cx_Freeze creates the Windows portable archive and MSI from one configuration.
 windows:
 	powershell.exe -ExecutionPolicy Bypass -File scripts/build-windows.ps1
+
+prepare-release:
+	$(PYTHON) scripts/prepare_release.py
+
+install-deb:
+	$(SUDO) apt-get update
+	$(SUDO) apt-get -y install appstream debhelper dh-python dpkg-dev \
+		pybuild-plugin-pyproject python3-all python3-gi python3-setuptools shared-mime-info
+
+install-rpm:
+	$(SUDO) dnf --assumeyes install dnf-plugins-core rpm-build
+	$(SUDO) dnf --assumeyes builddep packaging/rpm/bwverify.spec
 
 # Python distributions remain separate from native package builds and their toolchains.
 build:
@@ -56,7 +72,7 @@ coverage:
 # Run the same static checks locally and in continuous integration.
 lint:
 	PYTHONPATH=src $(PYTHON) -m pylint --persistent=no src tests scripts/clean.py \
-		scripts/generate_package_changelogs.py
+		scripts/package_metadata.py scripts/prepare_release.py src/freeze_entry.py
 
 check: test lint
 

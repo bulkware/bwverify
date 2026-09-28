@@ -39,7 +39,8 @@ manifests, output encoding and line endings, automatic verification after openin
 comment removal when saving. UTF-8 and Unix (LF) line endings are the defaults; choose
 UTF-8 with BOM, UTF-16, or Western (ISO-8859-1), plus Unix, Windows (CRLF), or classic
 Mac (CR) separators as needed. These output choices are used whenever any manifest is
-saved, including a file that was opened from disk. The default theme follows the desktop;
+saved, including a file that was opened from disk. The default theme follows the desktop,
+falling back to the configured GTK theme on older GTK releases;
 choose System, Light, or Dark to override it. Choose bundled Oxygen or Tango artwork, or
 GTK Symbolic icons that follow the active theme's foreground colour.
 
@@ -187,7 +188,10 @@ Run these commands from the checkout root. `make` or `make help` lists every tar
 | --- | --- |
 | `make rpm` | Build RPM packages from the local source |
 | `make deb` | Build Debian packages from the current working tree |
-| `make windows` | Build the Windows portable application and optional installer |
+| `make windows` | Build the Windows portable ZIP and MSI installer |
+| `make prepare-release` | Synchronize project and AppStream versions from `CHANGELOG.md` |
+| `make install-deb` | Install Debian package build dependencies |
+| `make install-rpm` | Install RPM package build dependencies |
 | `make build` | Build Python source and wheel distributions in `dist/` |
 | `make test` | Run unit tests |
 | `make coverage` | Measure application-code test coverage |
@@ -223,7 +227,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 PYTHONPATH=src python3 -m coverage run -m unittest discover -s tests -v
 python3 -m coverage report -m
 PYTHONPATH=src python3 -m pylint --persistent=no src tests scripts/clean.py \
-    scripts/generate_package_changelogs.py
+    scripts/package_metadata.py scripts/prepare_release.py src/freeze_entry.py
 ```
 
 On Fedora, install the system-provided coverage module with:
@@ -243,10 +247,9 @@ drag-and-drop, and both themes. Icons remain uncompressed `.svg` files.
 
 ## Building for Windows
 
-Windows builds use PyInstaller's one-folder mode and can be wrapped in an NSIS
-installer. The documented setup uses the latest released, prebuilt gvsbuild GTK
-archive and a matching CPython virtual environment; it does not require MSYS2 or
-a locally built GTK stack.
+Windows builds use cx_Freeze to produce a portable ZIP and a per-user MSI. The
+documented setup uses the latest released, prebuilt gvsbuild GTK archive and a matching
+CPython virtual environment; it does not require MSYS2 or a locally built GTK stack.
 
 From that environment, run the Make target:
 
@@ -261,18 +264,17 @@ is not installed:
 scripts\build-windows.ps1
 ```
 
-Close a previously built `bwVerify.exe` and any File Explorer window open in its
-build directory before rebuilding; Windows otherwise locks the folder that
-PyInstaller must replace.
+Extract the gvsbuild GTK4 x64 archive to `C:\gtk`. It provides the GTK runtime,
+PyGObject wheel, and PyCairo wheel used by the build. If GTK is installed elsewhere,
+set `GTK_PREFIX` to the directory containing `bin`, `lib`, and `share` before building.
 
-The portable application is written to `build\windows\dist\bwVerify`. If
-`makensis` is available, the script also creates
-`build\windows\installer\bwverify-<version>-setup.exe`, with optional file
-associations for `.sfv`, `.md5`, and `.sha256` files.
+The script stages GTK's runtime, schemas, modules, and icon theme beside the frozen
+application. It writes `build\windows\bwverify-<version>-win64-portable.zip` and an
+MSI under `build\windows\installer`. Close a previously built `bwVerify.exe` and any
+File Explorer window open in its build directory before rebuilding.
 
-PyInstaller creates the portable application, including its GTK runtime, icon
-theme, and bundled Oxygen/Tango SVG artwork. NSIS is optional and only creates
-a conventional installer around that finished folder.
+cx_Freeze includes the bundled Oxygen/Tango SVG artwork and uses the same staged GTK
+runtime in both artifacts.
 
 ## Building distribution packages
 
@@ -289,7 +291,8 @@ be run directly. Each native builder uses the local source tree; no Git reposito
 commit is required. RPM artifacts are placed under `build/rpm/rpmbuild/`.
 
 The Linux builders read the version and first author from `pyproject.toml`, so keep
-that metadata valid before building.
+that metadata valid before building. `make prepare-release` synchronizes the project
+version and AppStream release entry from the newest dated changelog section.
 
 The Debian build requires `dpkg-buildpackage`, `debhelper`, `dh-python`,
 `pybuild-plugin-pyproject`, and Python build dependencies. Install them with:
@@ -321,7 +324,7 @@ For a release, move the entries to `## [X.Y.Z] - YYYY-MM-DD` and recreate an emp
 versions use Semantic Versioning; native package revisions such as `1.0.0-2` stay
 in the packaging metadata.
 
-The Linux build wrappers run `scripts/generate_package_changelogs.py` first. It
+The Linux build wrappers run `scripts/package_metadata.py` first. It
 turns the matching release section into RPM and Debian changelog entries, checks
 the heading, categories, and version against `pyproject.toml`, and prevents duplicate
 entries. Both wrappers default to package revision `1`; to rebuild the same release

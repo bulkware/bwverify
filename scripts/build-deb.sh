@@ -7,6 +7,8 @@ package_revision=${PACKAGE_REVISION:-1}
 cd "$project_root"
 
 # Keep the native changelog synchronized with the validated project release notes.
-python3 "$project_root/scripts/generate_package_changelogs.py" \
+python3 "$project_root/scripts/package_metadata.py" \
     --debian-changelog "$project_root/debian/changelog" --revision "$package_revision"
 dpkg-buildpackage -us -uc -b
+mkdir -p "$project_root/build/deb"
+mv "$project_root"/../bwverify_*.deb "$project_root/build/deb/"

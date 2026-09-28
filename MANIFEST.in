@@ -1,2 +1,7 @@
-# Include icon licensing information in source distributions.
+# Keep source distributions usable for Windows and native-package builds.
+include CHANGELOG.md
 include ICONS.md
+include LICENSE.md
+include src/freeze_entry.py
+recursive-include data *
+recursive-include docs *.md
