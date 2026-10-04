@@ -6,9 +6,9 @@ bwVerify is licensed under [GPL-3.0-or-later](LICENSE.md).
 
 ## Interface
 
-bwVerify uses GTK 4 directly and does not depend on libadwaita. It is a conventional,
-cross-platform desktop utility, so GTK 4 provides the interface it needs without an
-extra GNOME-specific runtime dependency.
+bwVerify has a conventional, cross-platform GTK 4 interface with standard desktop
+controls. It does not depend on libadwaita, so it avoids an additional GNOME-specific
+runtime dependency.
 
 ## Using bwVerify
 
@@ -34,15 +34,21 @@ status line reports progress and completion, and bwVerify remembers the last fol
 and window size.
 
 **Main menu (☰) → Preferences** contains Appearance, New checksum files, Saved checksum
-files, and Behaviour settings. It controls the theme, icon set, defaults for new
-manifests, output encoding and line endings, automatic verification after opening, and
-comment removal when saving. UTF-8 and Unix (LF) line endings are the defaults; choose
-UTF-8 with BOM, UTF-16, or Western (ISO-8859-1), plus Unix, Windows (CRLF), or classic
-Mac (CR) separators as needed. These output choices are used whenever any manifest is
-saved, including a file that was opened from disk. The default theme follows the desktop,
-falling back to the configured GTK theme on older GTK releases;
-choose System, Light, or Dark to override it. Choose bundled Oxygen or Tango artwork, or
-GTK Symbolic icons that follow the active theme's foreground colour.
+files, and Behaviour settings. Use it to:
+
+- choose the theme and icon set;
+- set the format and path-style defaults for new manifests;
+- set output encoding and line endings for every saved manifest, including one opened
+  from disk;
+- enable automatic verification after opening; and
+- remove comments when saving.
+
+UTF-8 and Unix (LF) line endings are the defaults. Choose UTF-8 with BOM, UTF-16, or
+Western (ISO-8859-1) encoding, plus Unix, Windows (CRLF), or classic Mac (CR) separators,
+as needed. The default theme follows the desktop, falling back to the configured GTK
+theme on older GTK releases. Choose System, Light, or Dark to override it. Choose bundled
+Oxygen or Tango artwork, or GTK Symbolic icons that follow the active theme's foreground
+colour.
 
 Comments, which often begin with `;` in SFV files, are preserved by default. The compact
 Preferences and New checksum file windows have only the controls needed for their task.
@@ -84,7 +90,7 @@ The samples refer to `document-new.svg`, `document-open.svg`, and `dialog-ok.svg
 `mixed-results.sha256` deliberately includes one bad checksum and one missing file. If
 the icon files change, update the successful sample checksums.
 
-## Code layout
+## Code layout and desktop integration
 
 `bwverify.py` coordinates the application. Supporting modules keep individual
 concerns focused: `models.py` defines GTK list records and icon resources,
@@ -247,9 +253,10 @@ drag-and-drop, and both themes. Icons remain uncompressed `.svg` files.
 
 ## Building for Windows
 
-Windows builds use cx_Freeze to produce a portable ZIP and a per-user MSI. The
-documented setup uses the latest released, prebuilt gvsbuild GTK archive and a matching
-CPython virtual environment; it does not require MSYS2 or a locally built GTK stack.
+Windows builds use cx_Freeze to produce a portable ZIP and a per-user MSI. Use an x64
+CPython 3.11 or later virtual environment and a prebuilt gvsbuild GTK archive containing
+compatible PyGObject and PyCairo wheels. Install those wheels in the virtual environment
+before building. This setup does not require MSYS2 or a locally built GTK stack.
 
 From that environment, run the Make target:
 
