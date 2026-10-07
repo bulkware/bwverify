@@ -10,14 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
       - name: Install GTK and test dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gir1.2-gtk-4.0 python3-gi
-          python -m venv --system-site-packages .venv
+          # python3-gi is installed for Ubuntu's system Python.  Creating the
+          # venv with that interpreter keeps its dist-packages (and GTK
+          # introspection bindings) available to the GTK-backed tests.
+          sudo apt-get install -y gir1.2-gtk-4.0 python3-gi python3-venv
+          python3 -m venv --system-site-packages .venv
           .venv/bin/python -m pip install --upgrade pip
           .venv/bin/python -m pip install '.[dev]'
       - name: Run checks
